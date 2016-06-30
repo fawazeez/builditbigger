@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        applicationId "com.udacity.gradle.builditbigger"
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        //multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    productFlavors {
+        paid {
+            applicationId 'com.udacity.gradle.builditbigger.paid'
+        }
+        free {
+            applicationId 'com.udacity.gradle.builditbigger.free'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // Added for AdMob
+    compile project(":jokesource")
+    compile project(":jokedisplay")
+    compile 'com.android.support:appcompat-v7:23.0.1'
+    freeCompile 'com.google.android.gms:play-services-ads:9.2.0'
+    compile project(path: ':gcebackend', configuration: 'android-endpoints')
+}
+
+
+
+task runAppEngine (dependsOn: tasks.findByPath(":gcebackend:appengineRun")){
+    evaluationDependsOn(":gcebackend")
+
+    project(":gcebackend"){
+        appengine {
+            daemon true
+        }
+    }
+    doLast{
+        println "Server Started"
+    }
+}
+
+task ConnectedTest (dependsOn:connectedCheck){
+    doLast {
+        println "Test completed. See log for results"
+    }
+}
+
+project.gradle.taskGraph.whenReady {
+    connectedFreeDebugAndroidTest {
+        ignoreFailures = true
+    }
+    connectedPaidDebugAndroidTest {
+        ignoreFailures = true
+    }
+}
+ConnectedTest.dependsOn  runAppEngine
+ConnectedTest {}.mustRunAfter runAppEngine
+ConnectedTest.finalizedBy tasks.findByPath(":gcebackend:appengineStop")
