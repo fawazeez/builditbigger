@@ -39,34 +39,3 @@ dependencies {
 }
 
 
-
-task runAppEngine (dependsOn: tasks.findByPath(":gcebackend:appengineRun")){
-    evaluationDependsOn(":gcebackend")
-
-    project(":gcebackend"){
-        appengine {
-            daemon true
-        }
-    }
-    doLast{
-        println "Server Started"
-    }
-}
-
-task ConnectedTest (dependsOn:connectedCheck){
-    doLast {
-        println "Test completed. See log for results"
-    }
-}
-
-project.gradle.taskGraph.whenReady {
-    connectedFreeDebugAndroidTest {
-        ignoreFailures = true
-    }
-    connectedPaidDebugAndroidTest {
-        ignoreFailures = true
-    }
-}
-ConnectedTest.dependsOn  runAppEngine
-ConnectedTest {}.mustRunAfter runAppEngine
-ConnectedTest.finalizedBy tasks.findByPath(":gcebackend:appengineStop")

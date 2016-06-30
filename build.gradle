@@ -17,3 +17,28 @@ allprojects {
         jcenter()
     }
 }
+
+
+task runAppEngine (dependsOn: tasks.findByPath(":gcebackend:appengineRun")){
+    evaluationDependsOn(":gcebackend")
+
+    project(":gcebackend"){
+        appengine {
+            daemon true
+        }
+    }
+    doLast{
+        println "Server Started"
+    }
+}
+
+task ConnectedTest (dependsOn:tasks.findByPath(":app:connectedCheck")){
+    doLast {
+        println "Test completed. See log for results"
+    }
+}
+
+
+ConnectedTest.dependsOn  runAppEngine
+ConnectedTest {}.mustRunAfter runAppEngine
+ConnectedTest.finalizedBy tasks.findByPath(":gcebackend:appengineStop")
